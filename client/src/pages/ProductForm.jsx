@@ -5,7 +5,11 @@ import axios from "axios";
 
 const ProductForm = () => {
   const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 3;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -13,24 +17,28 @@ const ProductForm = () => {
         const response = await axios.get("http://localhost:7000/products");
         console.log(response.data);
         setProducts(response.data.products);
+        setFilteredProducts(response.data.products);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching products:", error);
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, []);
 
+
+  useEffect(() => {
+    setFilteredProducts(
+      products.filter((product) =>
+        product.name.toLowerCase().includes(search.toLowerCase())
+      )
+    );
+  }, [search, products]);
+
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(
-        `http://localhost:7000/products/${id}`
-      );
-      console.log("Product deleted:", response.data);
-
-     
+      await axios.delete(`http://localhost:7000/products/${id}`);
       setProducts((prevProducts) =>
         prevProducts.filter((product) => product._id !== id)
       );
@@ -39,9 +47,18 @@ const ProductForm = () => {
     }
   };
 
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = filteredProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-[100vh] font-bold text-2xl">
+      <div className="flex justify-center items-center h-screen font-bold text-2xl">
         Loading...
       </div>
     );
@@ -49,8 +66,22 @@ const ProductForm = () => {
 
   return (
     <div className="p-5 md:p-6">
+      <h1 className="font-bold md:text-4xl text-xl text-blue-600">
+        All Products Details
+      </h1>
       <AddPostButton />
-      <hr className="text-white shadow-xl" />
+      <hr className="my-4 border-gray-300" />
+
+      {/* Search Bar */}
+      <div className="flex justify-center mb-4">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full md:w-1/2 p-2 border rounded-lg shadow-sm focus:ring focus:ring-blue-300"
+        />
+      </div>
 
       <div className="overflow-x-auto p-4">
         <table className="table-auto border w-full text-left">
@@ -68,10 +99,10 @@ const ProductForm = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(products) && products.length > 0 ? (
-              products.map((product, index) => (
+            {currentProducts.length > 0 ? (
+              currentProducts.map((product, index) => (
                 <tr key={product._id} className="border-b">
-                  <th className="p-2">{index + 1}</th>
+                  <td className="p-2">{indexOfFirstProduct + index + 1}</td>
                   <td className="p-2">{product.name}</td>
                   <td className="p-2">{product.description}</td>
                   <td className="p-2">{product.price}</td>
@@ -81,7 +112,7 @@ const ProductForm = () => {
                   <td className="p-2">
                     {product.images && product.images.length > 0 ? (
                       <img
-                        src={`http://localhost:7000/${product.images[0]}`}
+                        src={`http://localhost:7000/${product.images?.[0]}`}
                         alt="Product"
                         className="w-12 h-12 object-cover"
                       />
@@ -100,7 +131,7 @@ const ProductForm = () => {
                     </button>
                     <button
                       className="px-2 py-1 text-white bg-red-500 rounded"
-                      onClick={() => handleDelete(product._id)} 
+                      onClick={() => handleDelete(product._id)}
                     >
                       Delete
                     </button>
@@ -116,6 +147,24 @@ const ProductForm = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-4">
+        {Array.from(
+          { length: Math.ceil(filteredProducts.length / productsPerPage) },
+          (_, i) => (
+            <button
+              key={i + 1}
+              onClick={() => paginate(i + 1)}
+              className={`px-3 py-1 mx-1 border rounded ${
+                currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"
+              }`}
+            >
+              {i + 1}
+            </button>
+          )
+        )}
       </div>
     </div>
   );

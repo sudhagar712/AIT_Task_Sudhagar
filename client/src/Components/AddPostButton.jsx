@@ -165,7 +165,7 @@ const AddPostButton = () => {
                       type="file"
                       name="images"
                       className="input-field"
-                      multiple // Allow multiple image uploads
+                      multiple 
                       onChange={handleInputChange}
                     />
                   </div>
