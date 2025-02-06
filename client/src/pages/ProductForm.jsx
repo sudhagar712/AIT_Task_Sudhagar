@@ -30,7 +30,7 @@ const ProductForm = () => {
       );
       console.log("Product deleted:", response.data);
 
-      // Remove the deleted product from the state
+     
       setProducts((prevProducts) =>
         prevProducts.filter((product) => product._id !== id)
       );

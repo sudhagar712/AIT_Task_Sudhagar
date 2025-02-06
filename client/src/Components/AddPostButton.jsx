@@ -16,9 +16,10 @@ const AddPostButton = () => {
     const { name, value, type, files } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: type === "file" ? files[0] : value, 
+      [name]: type === "file" ? files : value, 
     }));
   };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -164,6 +165,7 @@ const AddPostButton = () => {
                       type="file"
                       name="images"
                       className="input-field"
+                      multiple // Allow multiple image uploads
                       onChange={handleInputChange}
                     />
                   </div>
